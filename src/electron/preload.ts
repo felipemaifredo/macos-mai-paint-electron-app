@@ -18,8 +18,11 @@ contextBridge.exposeInMainWorld("api", {
   writeBinaryFile: function(filePath: string, base64Data: string) {
     return ipcRenderer.invoke("file:writeBinary", filePath, base64Data)
   },
+  changeLanguage: function(locale: string) {
+    ipcRenderer.send("language-changed", locale)
+  },
   onMenuAction: function(callback: (action: string) => void) {
-    const listener = function(_event: any, action: string) {
+    let listener = function(_event: any, action: string) {
       callback(action)
     }
     ipcRenderer.on("menu-action", listener)

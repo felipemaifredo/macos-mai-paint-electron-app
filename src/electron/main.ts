@@ -3,7 +3,189 @@ import { app, BrowserWindow, ipcMain, dialog, Menu } from "electron"
 import * as path from "path"
 import * as fs from "fs"
 
+//Types
+type MainTranslations = {
+  about: string
+  services: string
+  hide: string
+  hideOthers: string
+  showAll: string
+  quit: string
+  file: string
+  newProject: string
+  open: string
+  save: string
+  saveAs: string
+  exportPng: string
+  exportJpg: string
+  exportPdf: string
+  edit: string
+  undo: string
+  redo: string
+  copy: string
+  paste: string
+  duplicate: string
+  delete: string
+  selectAll: string
+  view: string
+  reload: string
+  forceReload: string
+  toggleDevTools: string
+  fullScreen: string
+  window: string
+  minimize: string
+  zoom: string
+  front: string
+  dialogProjects: string
+  dialogPng: string
+  dialogJpg: string
+  dialogPdf: string
+  defaultFilename: string
+}
+
+type TranslationsMap = {
+  en: MainTranslations
+  pt: MainTranslations
+  es: MainTranslations
+}
+
+//Consts
+let translations: TranslationsMap = {
+  en: {
+    about: "About Mai Paint",
+    services: "Services",
+    hide: "Hide Mai Paint",
+    hideOthers: "Hide Others",
+    showAll: "Show All",
+    quit: "Quit Mai Paint",
+    file: "File",
+    newProject: "New Project",
+    open: "Open...",
+    save: "Save",
+    saveAs: "Save As...",
+    exportPng: "Export as PNG",
+    exportJpg: "Export as JPG",
+    exportPdf: "Export as PDF",
+    edit: "Edit",
+    undo: "Undo",
+    redo: "Redo",
+    copy: "Copy",
+    paste: "Paste",
+    duplicate: "Duplicate",
+    delete: "Delete",
+    selectAll: "Select All",
+    view: "View",
+    reload: "Reload",
+    forceReload: "Force Reload",
+    toggleDevTools: "Toggle Developer Tools",
+    fullScreen: "Toggle Full Screen",
+    window: "Window",
+    minimize: "Minimize",
+    zoom: "Zoom",
+    front: "Bring All to Front",
+    dialogProjects: "Mai Paint Projects",
+    dialogPng: "PNG Images",
+    dialogJpg: "JPEG Images",
+    dialogPdf: "PDF Documents",
+    defaultFilename: "untitled.maipaint"
+  },
+  pt: {
+    about: "Sobre o Mai Paint",
+    services: "Serviços",
+    hide: "Ocultar Mai Paint",
+    hideOthers: "Ocultar Outros",
+    showAll: "Mostrar Todos",
+    quit: "Encerrar Mai Paint",
+    file: "Arquivo",
+    newProject: "Novo Projeto",
+    open: "Abrir...",
+    save: "Salvar",
+    saveAs: "Salvar Como...",
+    exportPng: "Exportar como PNG",
+    exportJpg: "Exportar como JPG",
+    exportPdf: "Exportar como PDF",
+    edit: "Editar",
+    undo: "Desfazer",
+    redo: "Refazer",
+    copy: "Copiar",
+    paste: "Colar",
+    duplicate: "Duplicar",
+    delete: "Excluir",
+    selectAll: "Selecionar Tudo",
+    view: "Visualizar",
+    reload: "Recarregar",
+    forceReload: "Forçar Recarregamento",
+    toggleDevTools: "Alternar Ferramentas de Desenvolvedor",
+    fullScreen: "Tela Cheia",
+    window: "Janela",
+    minimize: "Minimizar",
+    zoom: "Zoom",
+    front: "Trazer Tudo para a Frente",
+    dialogProjects: "Projetos Mai Paint",
+    dialogPng: "Imagens PNG",
+    dialogJpg: "Imagens JPEG",
+    dialogPdf: "Documentos PDF",
+    defaultFilename: "sem-titulo.maipaint"
+  },
+  es: {
+    about: "Acerca de Mai Paint",
+    services: "Servicios",
+    hide: "Ocultar Mai Paint",
+    hideOthers: "Ocultar otros",
+    showAll: "Mostrar todo",
+    quit: "Salir de Mai Paint",
+    file: "Archivo",
+    newProject: "Nuevo Proyecto",
+    open: "Abrir...",
+    save: "Guardar",
+    saveAs: "Guardar como...",
+    exportPng: "Exportar como PNG",
+    exportJpg: "Exportar como JPG",
+    exportPdf: "Exportar como PDF",
+    edit: "Editar",
+    undo: "Deshacer",
+    redo: "Rehacer",
+    copy: "Copiar",
+    paste: "Pegar",
+    duplicate: "Duplicar",
+    delete: "Eliminar",
+    selectAll: "Seleccionar todo",
+    view: "Ver",
+    reload: "Recargar",
+    forceReload: "Forzar recarga",
+    toggleDevTools: "Alternar herramientas de desarrollador",
+    fullScreen: "Pantalla completa",
+    window: "Ventana",
+    minimize: "Minimizar",
+    zoom: "Zoom",
+    front: "Traer todo al frente",
+    dialogProjects: "Proyectos Mai Paint",
+    dialogPng: "Imágenes PNG",
+    dialogJpg: "Imágenes JPEG",
+    dialogPdf: "Documentos PDF",
+    defaultFilename: "sin-titulo.maipaint"
+  }
+}
+
+let currentLocale: "en" | "pt" | "es" = "en"
+let mainWindow: BrowserWindow | null = null
+
 //Funcs
+function initLocale() {
+  let locale = app.getLocale().toLowerCase()
+  if (locale.startsWith("pt")) {
+    currentLocale = "pt"
+  } else if (locale.startsWith("es")) {
+    currentLocale = "es"
+  } else {
+    currentLocale = "en"
+  }
+}
+
+function getTranslations(): MainTranslations {
+  return translations[currentLocale] || translations.en
+}
+
 function createWindow() {
   let iconPath = ""
   if (process.platform === "win32") {
@@ -33,6 +215,7 @@ function createWindow() {
     }
   })
 
+  mainWindow = win
   createApplicationMenu(win)
 
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -44,33 +227,34 @@ function createWindow() {
 }
 
 function createApplicationMenu(win: BrowserWindow) {
-  const template: Electron.MenuItemConstructorOptions[] = [
+  let t = getTranslations()
+  let template: Electron.MenuItemConstructorOptions[] = [
     {
       label: "Mai Paint",
       submenu: [
-        { role: "about", label: "Sobre o Mai Paint" },
+        { role: "about", label: t.about },
         { type: "separator" },
-        { role: "services", label: "Serviços" },
+        { role: "services", label: t.services },
         { type: "separator" },
-        { role: "hide", label: "Ocultar Mai Paint" },
-        { role: "hideOthers", label: "Ocultar Outros" },
-        { role: "unhide", label: "Mostrar Todos" },
+        { role: "hide", label: t.hide },
+        { role: "hideOthers", label: t.hideOthers },
+        { role: "unhide", label: t.showAll },
         { type: "separator" },
-        { role: "quit", label: "Encerrar Mai Paint" }
+        { role: "quit", label: t.quit }
       ]
     },
     {
-      label: "Arquivo",
+      label: t.file,
       submenu: [
         {
-          label: "Novo Projeto",
+          label: t.newProject,
           accelerator: "CmdOrCtrl+N",
           click: function() {
             win.webContents.send("menu-action", "new")
           }
         },
         {
-          label: "Abrir...",
+          label: t.open,
           accelerator: "CmdOrCtrl+O",
           click: function() {
             win.webContents.send("menu-action", "open")
@@ -78,14 +262,14 @@ function createApplicationMenu(win: BrowserWindow) {
         },
         { type: "separator" },
         {
-          label: "Salvar",
+          label: t.save,
           accelerator: "CmdOrCtrl+S",
           click: function() {
             win.webContents.send("menu-action", "save")
           }
         },
         {
-          label: "Salvar Como...",
+          label: t.saveAs,
           accelerator: "CmdOrCtrl+Shift+S",
           click: function() {
             win.webContents.send("menu-action", "save-as")
@@ -93,19 +277,19 @@ function createApplicationMenu(win: BrowserWindow) {
         },
         { type: "separator" },
         {
-          label: "Exportar como PNG",
+          label: t.exportPng,
           click: function() {
             win.webContents.send("menu-action", "export-png")
           }
         },
         {
-          label: "Exportar como JPG",
+          label: t.exportJpg,
           click: function() {
             win.webContents.send("menu-action", "export-jpg")
           }
         },
         {
-          label: "Exportar como PDF",
+          label: t.exportPdf,
           click: function() {
             win.webContents.send("menu-action", "export-pdf")
           }
@@ -113,17 +297,17 @@ function createApplicationMenu(win: BrowserWindow) {
       ]
     },
     {
-      label: "Editar",
+      label: t.edit,
       submenu: [
         {
-          label: "Desfazer",
+          label: t.undo,
           accelerator: "CmdOrCtrl+Z",
           click: function() {
             win.webContents.send("menu-action", "undo")
           }
         },
         {
-          label: "Refazer",
+          label: t.redo,
           accelerator: "CmdOrCtrl+Shift+Z",
           click: function() {
             win.webContents.send("menu-action", "redo")
@@ -131,28 +315,28 @@ function createApplicationMenu(win: BrowserWindow) {
         },
         { type: "separator" },
         {
-          label: "Copiar",
+          label: t.copy,
           accelerator: "CmdOrCtrl+C",
           click: function() {
             win.webContents.send("menu-action", "copy")
           }
         },
         {
-          label: "Colar",
+          label: t.paste,
           accelerator: "CmdOrCtrl+V",
           click: function() {
             win.webContents.send("menu-action", "paste")
           }
         },
         {
-          label: "Duplicar",
+          label: t.duplicate,
           accelerator: "CmdOrCtrl+D",
           click: function() {
             win.webContents.send("menu-action", "duplicate")
           }
         },
         {
-          label: "Excluir",
+          label: t.delete,
           accelerator: "Delete",
           click: function() {
             win.webContents.send("menu-action", "delete")
@@ -160,7 +344,7 @@ function createApplicationMenu(win: BrowserWindow) {
         },
         { type: "separator" },
         {
-          label: "Selecionar Tudo",
+          label: t.selectAll,
           accelerator: "CmdOrCtrl+A",
           click: function() {
             win.webContents.send("menu-action", "select-all")
@@ -169,51 +353,66 @@ function createApplicationMenu(win: BrowserWindow) {
       ]
     },
     {
-      label: "Visualizar",
+      label: t.view,
       submenu: [
-        { role: "reload", label: "Recarregar" },
-        { role: "forceReload", label: "Forçar Recarregamento" },
-        { role: "toggleDevTools", label: "Alternar Ferramentas de Desenvolvedor" },
+        { role: "reload", label: t.reload },
+        { role: "forceReload", label: t.forceReload },
+        { role: "toggleDevTools", label: t.toggleDevTools },
         { type: "separator" },
-        { role: "togglefullscreen", label: "Tela Cheia" }
+        { role: "togglefullscreen", label: t.fullScreen }
       ]
     },
     {
-      label: "Janela",
+      label: t.window,
       submenu: [
-        { role: "minimize", label: "Minimizar" },
-        { role: "zoom", label: "Zoom" },
+        { role: "minimize", label: t.minimize },
+        { role: "zoom", label: t.zoom },
         { type: "separator" },
-        { role: "front", label: "Trazer Tudo para a Frente" }
+        { role: "front", label: t.front }
       ]
     }
   ]
 
-  const menu = Menu.buildFromTemplate(template)
+  let menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
 
 function registerIpcHandlers() {
+  ipcMain.on("language-changed", function(_event, locale: string) {
+    let newLocale: "en" | "pt" | "es" = "en"
+    if (locale === "pt" || locale === "es") {
+      newLocale = locale
+    }
+    if (currentLocale !== newLocale) {
+      currentLocale = newLocale
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        createApplicationMenu(mainWindow)
+      }
+    }
+  })
+
   ipcMain.handle("dialog:showOpenDialog", async function() {
+    let t = getTranslations()
     return dialog.showOpenDialog({
       properties: ["openFile"],
       filters: [
-        { name: "Projetos Mai Paint", extensions: ["maipaint"] }
+        { name: t.dialogProjects, extensions: ["maipaint"] }
       ]
     })
   })
 
   ipcMain.handle("dialog:showSaveDialog", async function(_event, defaultPath?: string) {
-    let pathStr = defaultPath || "sem-titulo.maipaint"
+    let t = getTranslations()
+    let pathStr = defaultPath || t.defaultFilename
     let ext = pathStr.split(".").pop()?.toLowerCase() || ""
     
-    let filters = [{ name: "Projetos Mai Paint", extensions: ["maipaint"] }]
+    let filters = [{ name: t.dialogProjects, extensions: ["maipaint"] }]
     if (ext === "png") {
-      filters = [{ name: "Imagens PNG", extensions: ["png"] }]
+      filters = [{ name: t.dialogPng, extensions: ["png"] }]
     } else if (ext === "jpg" || ext === "jpeg") {
-      filters = [{ name: "Imagens JPEG", extensions: ["jpg", "jpeg"] }]
+      filters = [{ name: t.dialogJpg, extensions: ["jpg", "jpeg"] }]
     } else if (ext === "pdf") {
-      filters = [{ name: "Documentos PDF", extensions: ["pdf"] }]
+      filters = [{ name: t.dialogPdf, extensions: ["pdf"] }]
     }
 
     let result = await dialog.showSaveDialog({
@@ -244,7 +443,7 @@ function registerIpcHandlers() {
 
   ipcMain.handle("file:read", async function(_event, filePath: string) {
     try {
-      const content = fs.readFileSync(filePath, "utf-8")
+      let content = fs.readFileSync(filePath, "utf-8")
       return { success: true, content }
     } catch (error: any) {
       return { success: false, error: error.message }
@@ -262,8 +461,8 @@ function registerIpcHandlers() {
 
   ipcMain.handle("file:writeBinary", async function(_event, filePath: string, base64Data: string) {
     try {
-      const cleanData = base64Data.replace(/^data:[^;]+;base64,/, "")
-      const buffer = Buffer.from(cleanData, "base64")
+      let cleanData = base64Data.replace(/^data:[^;]+;base64,/, "")
+      let buffer = Buffer.from(cleanData, "base64")
       fs.writeFileSync(filePath, buffer)
       return { success: true }
     } catch (error: any) {
@@ -274,6 +473,7 @@ function registerIpcHandlers() {
 
 //Main
 app.whenReady().then(function() {
+  initLocale()
   registerIpcHandlers()
   createWindow()
 

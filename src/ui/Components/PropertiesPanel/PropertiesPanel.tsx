@@ -8,10 +8,12 @@ import {
 
 //Imports
 import { useCanvasStore } from "../../../Lib/Hooks/useCanvasStore"
+import useI18n from "../../../Lib/Hooks/useI18n"
 import styles from "./PropertiesPanel.module.css"
 
 //Main
 export const PropertiesPanel = () => {
+  const { t } = useI18n()
   const selectedIds = useCanvasStore(function(state) {
     return state.selectedIds
   })
@@ -86,15 +88,15 @@ export const PropertiesPanel = () => {
   return (
     <div className={styles.panel}>
       <div className={styles.section}>
-        <span className={styles.sectionHeader}>Preenchimento</span>
+        <span className={styles.sectionHeader}>{t.properties.fill}</span>
         <div className={styles.row}>
-          <span className={styles.label}>Cor</span>
+          <span className={styles.label}>{t.properties.color}</span>
           <div className={styles.colorPickerWrapper}>
             <div className={styles.colorPickerContainer}>
               <button
                 className={styles.colorButton}
                 style={{ backgroundColor: isFillTransparent ? "transparent" : currentFill }}
-                title="Escolher Cor"
+                title={t.properties.chooseColor}
               />
               <input
                 type="color"
@@ -111,24 +113,24 @@ export const PropertiesPanel = () => {
               onClick={function() {
                 setStyle({ fill: isFillTransparent ? "rgba(0, 122, 255, 0.1)" : "transparent" })
               }}
-              title="Preenchimento Transparente"
+              title={t.properties.transparentFill}
             >
-              Nenhum
+              {t.properties.none}
             </button>
           </div>
         </div>
       </div>
 
       <div className={styles.section}>
-        <span className={styles.sectionHeader}>Contorno</span>
+        <span className={styles.sectionHeader}>{t.properties.stroke}</span>
         <div className={styles.row}>
-          <span className={styles.label}>Cor</span>
+          <span className={styles.label}>{t.properties.color}</span>
           <div className={styles.colorPickerWrapper}>
             <div className={styles.colorPickerContainer}>
               <button
                 className={styles.colorButton}
                 style={{ backgroundColor: currentStroke }}
-                title="Escolher Cor"
+                title={t.properties.chooseColor}
               />
               <input
                 type="color"
@@ -142,7 +144,7 @@ export const PropertiesPanel = () => {
           </div>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Espessura</span>
+          <span className={styles.label}>{t.properties.strokeWidth}</span>
           <input
             type="range"
             min="1"
@@ -167,7 +169,7 @@ export const PropertiesPanel = () => {
       </div>
 
       <div className={styles.section}>
-        <span className={styles.sectionHeader}>Opacidade</span>
+        <span className={styles.sectionHeader}>{t.properties.opacity}</span>
         <div className={styles.row}>
           <input
             type="range"
@@ -188,9 +190,9 @@ export const PropertiesPanel = () => {
 
       {showTextProperties && (
         <div className={styles.section}>
-          <span className={styles.sectionHeader}>Texto</span>
+          <span className={styles.sectionHeader}>{t.properties.text}</span>
           <div className={styles.row}>
-            <span className={styles.label}>Fonte</span>
+            <span className={styles.label}>{t.properties.font}</span>
             <select
               className={styles.select}
               value={currentFontFamily}
@@ -198,16 +200,16 @@ export const PropertiesPanel = () => {
                 setStyle({ fontFamily: e.target.value })
               }}
             >
-              <option value="-apple-system">Sistema macOS</option>
+              <option value="-apple-system">{t.properties.systemFont}</option>
               <option value="Inter">Inter</option>
-              <option value="monospace">Monoespaçada</option>
+              <option value="monospace">{t.properties.monospaceFont}</option>
               <option value="Georgia">Georgia</option>
               <option value="Courier New">Courier New</option>
               <option value="Impact">Impact</option>
             </select>
           </div>
           <div className={styles.row}>
-            <span className={styles.label}>Tamanho</span>
+            <span className={styles.label}>{t.properties.fontSize}</span>
             <input
               type="range"
               min="10"
@@ -233,43 +235,43 @@ export const PropertiesPanel = () => {
       )}
 
       <div className={styles.section}>
-        <span className={styles.sectionHeader}>Ações Rápidas</span>
+        <span className={styles.sectionHeader}>{t.properties.quickActions}</span>
         <div className={styles.buttonGrid}>
           <button
             className={styles.actionButton}
             onClick={duplicateElements}
             disabled={selectedIds.length === 0}
-            title="Duplicar Elementos Selecionados"
+            title={t.properties.duplicateTooltip}
           >
             <Copy size={14} />
-            Duplicar
+            {t.properties.duplicateBtn}
           </button>
           <button
             className={`${styles.actionButton} ${styles.dangerButton}`}
             onClick={deleteElements}
             disabled={selectedIds.length === 0}
-            title="Excluir Elementos Selecionados"
+            title={t.properties.deleteTooltip}
           >
             <Trash2 size={14} />
-            Excluir
+            {t.properties.deleteBtn}
           </button>
           <button
             className={styles.actionButton}
             onClick={groupElements}
             disabled={!isGroupEnabled}
-            title="Agrupar Elementos"
+            title={t.properties.groupTooltip}
           >
             <FolderPlus size={14} />
-            Agrupar
+            {t.properties.groupBtn}
           </button>
           <button
             className={styles.actionButton}
             onClick={ungroupElements}
             disabled={!isUngroupEnabled}
-            title="Desagrupar Elementos"
+            title={t.properties.ungroupTooltip}
           >
             <FolderMinus size={14} />
-            Desagrupar
+            {t.properties.ungroupBtn}
           </button>
         </div>
       </div>

@@ -4,10 +4,12 @@ import { Home } from "lucide-react"
 
 //Imports
 import { useCanvasStore } from "../../../Lib/Hooks/useCanvasStore"
+import useI18n from "../../../Lib/Hooks/useI18n"
 import styles from "./TitleBar.module.css"
 
 //Main
 export const TitleBar = () => {
+  let { t } = useI18n()
   let view = useCanvasStore(function(state) {
     return state.view
   })
@@ -43,9 +45,9 @@ export const TitleBar = () => {
   return (
     <div className={styles.titleBar}>
       {view === "editor" && (
-        <button className={styles.backButton} onClick={function() { setView("dashboard") }} title="Voltar para Projetos">
+        <button className={styles.backButton} onClick={function() { setView("dashboard") }} title={t.titleBar.backTooltip}>
           <Home size={12} />
-          Projetos
+          {t.titleBar.projects}
         </button>
       )}
 
@@ -69,14 +71,14 @@ export const TitleBar = () => {
               }}
             />
           ) : (
-            <span className={styles.titleText} onClick={handleStartEdit} title="Clique para renomear">
+            <span className={styles.titleText} onClick={handleStartEdit} title={t.titleBar.clickToRename}>
               {currentProjectName}
             </span>
           )
         ) : (
-          <span>Dashboard</span>
+          <span>{t.titleBar.dashboard}</span>
         )}
-        {view === "editor" && isDirty && <div className={styles.dirtyDot} title="Alterações não salvas" />}
+        {view === "editor" && isDirty && <div className={styles.dirtyDot} title={t.titleBar.unsavedChanges} />}
       </div>
     </div>
   )

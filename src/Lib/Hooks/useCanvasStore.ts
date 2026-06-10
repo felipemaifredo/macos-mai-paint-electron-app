@@ -65,6 +65,17 @@ type CanvasStore = {
 }
 
 //Funcs
+function getInitialProjectName(): string {
+  let saved = localStorage.getItem("app-language") || navigator.language.toLowerCase()
+  if (saved.startsWith("pt")) {
+    return "Sem título"
+  }
+  if (saved.startsWith("es")) {
+    return "Sin título"
+  }
+  return "Untitled"
+}
+
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
 }
@@ -115,7 +126,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
   view: "dashboard",
   currentProjectId: null,
-  currentProjectName: "Sem título",
+  currentProjectName: getInitialProjectName(),
 
   setView(view) {
     set({ view })
@@ -392,7 +403,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
   newProject() {
     let id = generateId()
-    let name = "Sem título"
+    let name = getInitialProjectName()
     set({
       view: "editor",
       currentProjectId: id,

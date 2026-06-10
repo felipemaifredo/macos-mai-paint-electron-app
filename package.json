@@ -1,6 +1,6 @@
 {
   "name": "mai-paint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Editor visual leve inspirado no Microsoft Paint para diagramas, fluxogramas e wireframes",
   "main": "dist-electron/main.js",
   "scripts": {

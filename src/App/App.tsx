@@ -7,6 +7,7 @@ import Konva from "konva"
 import { useCanvasStore } from "../Lib/Hooks/useCanvasStore"
 import { MainPage } from "../ui/Pages/MainPage"
 import { CanvasElement } from "../Lib/Types/canvas.types"
+import useI18n from "../Lib/Hooks/useI18n"
 
 //Types
 type WindowApi = {
@@ -25,60 +26,68 @@ function generateId() {
 
 //Main
 export const App = () => {
-  const elements = useCanvasStore(function(state) {
+  let { t, locale } = useI18n()
+  let elements = useCanvasStore(function(state) {
     return state.elements
   })
-  const selectedIds = useCanvasStore(function(state) {
+  let selectedIds = useCanvasStore(function(state) {
     return state.selectedIds
   })
-  const filePath = useCanvasStore(function(state) {
+  let filePath = useCanvasStore(function(state) {
     return state.filePath
   })
-  const isDirty = useCanvasStore(function(state) {
+  let isDirty = useCanvasStore(function(state) {
     return state.isDirty
   })
 
   // Store actions
-  const newProject = useCanvasStore(function(state) {
+  let newProject = useCanvasStore(function(state) {
     return state.newProject
   })
-  const openProject = useCanvasStore(function(state) {
+  let openProject = useCanvasStore(function(state) {
     return state.openProject
   })
-  const saveProject = useCanvasStore(function(state) {
+  let saveProject = useCanvasStore(function(state) {
     return state.saveProject
   })
-  const undo = useCanvasStore(function(state) {
+  let undo = useCanvasStore(function(state) {
     return state.undo
   })
-  const redo = useCanvasStore(function(state) {
+  let redo = useCanvasStore(function(state) {
     return state.redo
   })
-  const deleteElements = useCanvasStore(function(state) {
+  let deleteElements = useCanvasStore(function(state) {
     return state.deleteElements
   })
-  const duplicateElements = useCanvasStore(function(state) {
+  let duplicateElements = useCanvasStore(function(state) {
     return state.duplicateElements
   })
-  const setElements = useCanvasStore(function(state) {
+  let setElements = useCanvasStore(function(state) {
     return state.setElements
   })
-  const setSelectedIds = useCanvasStore(function(state) {
+  let setSelectedIds = useCanvasStore(function(state) {
     return state.setSelectedIds
   })
-  const saveHistory = useCanvasStore(function(state) {
+  let saveHistory = useCanvasStore(function(state) {
     return state.saveHistory
   })
 
   // Clipboard memory for copy/paste inside app
-  const clipboardElementsRef = useRef<CanvasElement[] | null>(null)
+  let clipboardElementsRef = useRef<CanvasElement[] | null>(null)
 
-  const api = (window as any).api as WindowApi
+  let api = (window as any).api as WindowApi
+
+  // Send language change notifications to electron main process
+  useEffect(function() {
+    if (api && (api as any).changeLanguage) {
+      ;(api as any).changeLanguage(locale)
+    }
+  }, [locale])
 
   // File IO helpers
   function handleNew() {
     if (isDirty) {
-      const confirm = window.confirm("Deseja criar um novo projeto? As alterações não salvas serão perdidas.")
+      let confirm = window.confirm(t.app.confirmNewProject)
       if (!confirm) return
     }
     newProject()
@@ -86,7 +95,7 @@ export const App = () => {
 
   async function handleOpen() {
     if (isDirty) {
-      const confirm = window.confirm("Deseja abrir outro projeto? As alterações não salvas serão perdidas.")
+      const confirm = window.confirm(t.app.confirmOpenProject)
       if (!confirm) return
     }
 
@@ -103,13 +112,13 @@ export const App = () => {
         if (Array.isArray(projectData.elements)) {
           openProject(selectedPath, projectData.elements)
         } else {
-          alert("Estrutura do arquivo de projeto inválida.")
+          alert(t.app.invalidProjectFile)
         }
       } catch (err) {
-        alert("Erro ao ler o arquivo de projeto.")
+        alert(t.app.errorReadingProject)
       }
     } else {
-      alert(`Falha ao ler o arquivo: ${fileResult.error}`)
+      alert(t.app.failRead.replace("{error}", fileResult.error || ""))
     }
   }
 
@@ -129,7 +138,7 @@ export const App = () => {
     if (saveResult.success) {
       saveProject(filePath)
     } else {
-      alert(`Falha ao salvar: ${saveResult.error}`)
+      alert(t.app.failSave.replace("{error}", saveResult.error || ""))
     }
   }
 
@@ -147,7 +156,7 @@ export const App = () => {
     if (saveResult.success) {
       saveProject(result.filePath)
     } else {
-      alert(`Falha ao salvar: ${saveResult.error}`)
+      alert(t.app.failSave.replace("{error}", saveResult.error || ""))
     }
   }
 
@@ -156,7 +165,7 @@ export const App = () => {
     if (!api) return
     let stage = document.querySelector(".konvajs-content")?.parentElement as any
     if (!stage) {
-      alert("Canvas não encontrado para exportação.")
+      alert(t.app.canvasNotFound)
       return
     }
 
@@ -205,7 +214,7 @@ export const App = () => {
 
       let exportResult = await api.writeBinaryFile(saveResult.filePath, dataUrl)
       if (!exportResult.success) {
-        alert(`Falha ao exportar imagem: ${exportResult.error}`)
+        alert(t.app.failExportImage.replace("{error}", exportResult.error || ""))
       }
     }
   }
@@ -272,7 +281,7 @@ export const App = () => {
 
       let exportResult = await api.writeBinaryFile(saveResult.filePath, dataUri)
       if (!exportResult.success) {
-        alert(`Falha ao exportar PDF: ${exportResult.error}`)
+        alert(t.app.failExportPdf.replace("{error}", exportResult.error || ""))
       }
     }
   }
@@ -280,7 +289,7 @@ export const App = () => {
   // Copy Paste helpers
   function handleCopy() {
     if (selectedIds.length === 0) return
-    const selectedElements = elements.filter(function(el) {
+    let selectedElements = elements.filter(function(el) {
       return selectedIds.includes(el.id)
     })
     clipboardElementsRef.current = JSON.parse(JSON.stringify(selectedElements))
@@ -289,20 +298,20 @@ export const App = () => {
   function handlePaste() {
     if (!clipboardElementsRef.current || clipboardElementsRef.current.length === 0) return
 
-    const groupMap = new Map<string, string>()
+    let groupMap = new Map<string, string>()
     clipboardElementsRef.current.forEach(function(el) {
       if (el.groupId && !groupMap.has(el.groupId)) {
         groupMap.set(el.groupId, generateId())
       }
     })
 
-    const duplicates = clipboardElementsRef.current.map(function(el) {
-      const newId = generateId()
-      const newGroupId = el.groupId ? groupMap.get(el.groupId) : undefined
-      const offset = 20
+    let duplicates = clipboardElementsRef.current.map(function(el) {
+      let newId = generateId()
+      let newGroupId = el.groupId ? groupMap.get(el.groupId) : undefined
+      let offset = 20
 
       if (el.type === "pencil" || el.type === "line" || el.type === "arrow") {
-        const points = el.points ? el.points.map(function(pt, idx) {
+        let points = el.points ? el.points.map(function(pt, idx) {
           return idx % 2 === 0 ? pt + offset : pt + offset
         }) : undefined
         return {
@@ -324,8 +333,8 @@ export const App = () => {
       }
     })
 
-    const newElements = [...elements, ...duplicates]
-    const duplicateIds = duplicates.map(function(d) { return d.id })
+    let newElements = [...elements, ...duplicates]
+    let duplicateIds = duplicates.map(function(d) { return d.id })
 
     // Update clipboard buffer with shifting offset so pasting repeatedly shifts elements
     clipboardElementsRef.current = duplicates
@@ -338,7 +347,7 @@ export const App = () => {
   // Hook Menu Actions from Electron Main process
   useEffect(function() {
     if (api) {
-      const unsubscribe = api.onMenuAction(function(action) {
+      let unsubscribe = api.onMenuAction(function(action) {
         switch (action) {
           case "new":
             handleNew()
@@ -392,8 +401,8 @@ export const App = () => {
   // Native keyboard listener for shortcuts inside window
   useEffect(function() {
     function handleKeyDown(e: KeyboardEvent) {
-      const isCmd = e.metaKey || e.ctrlKey
-      const isShift = e.shiftKey
+      let isCmd = e.metaKey || e.ctrlKey
+      let isShift = e.shiftKey
       
       // Ignore shortcut if typing in textarea or input fields
       if (document.activeElement?.tagName === "TEXTAREA" || document.activeElement?.tagName === "INPUT") {

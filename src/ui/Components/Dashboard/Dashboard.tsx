@@ -8,12 +8,14 @@ import {
   Edit2,
   Download,
   FolderOpen,
-  Search
+  Search,
+  Settings
 } from "lucide-react"
 
 //Imports
 import { useCanvasStore } from "../../../Lib/Hooks/useCanvasStore"
 import { CanvasElement } from "../../../Lib/Types/canvas.types"
+import useI18n from "../../../Lib/Hooks/useI18n"
 import styles from "./Dashboard.module.css"
 
 //Types
@@ -153,9 +155,9 @@ function drawElementsToCanvas(elements: CanvasElement[], canvas: HTMLCanvasEleme
   })
 }
 
-async function exportProjectToPng(name: string, elements: CanvasElement[]) {
+async function exportProjectToPng(name: string, elements: CanvasElement[], t: any) {
   if (elements.length === 0) {
-    alert("Não é possível exportar um projeto vazio.")
+    alert(t.dashboard.cannotExportEmpty)
     return
   }
 
@@ -188,7 +190,7 @@ async function exportProjectToPng(name: string, elements: CanvasElement[]) {
     if (saveResult.canceled || !saveResult.filePath) return
     let exportResult = await api.writeBinaryFile(saveResult.filePath, dataUrl)
     if (!exportResult.success) {
-      alert(`Falha ao exportar PNG: ${exportResult.error}`)
+      alert(t.dashboard.failExportPng.replace("{error}", exportResult.error || ""))
     }
   } else {
     let a = document.createElement("a")
@@ -202,6 +204,7 @@ async function exportProjectToPng(name: string, elements: CanvasElement[]) {
 
 //Main
 export const Dashboard = () => {
+  let { t, locale, changeLanguage } = useI18n()
   let newProject = useCanvasStore(function(state) {
     return state.newProject
   })
@@ -214,6 +217,15 @@ export const Dashboard = () => {
   let [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   let [renamingProjectId, setRenamingProjectId] = useState<string | null>(null)
   let [renamingName, setRenamingName] = useState("")
+  let [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
+  function openSettings() {
+    setIsSettingsOpen(true)
+  }
+
+  function closeSettings() {
+    setIsSettingsOpen(false)
+  }
 
   function loadProjects() {
     let projectsRaw = localStorage.getItem("mai_paint_local_projects")
@@ -240,7 +252,7 @@ export const Dashboard = () => {
 
   function handleDelete(id: string, e: React.MouseEvent) {
     e.stopPropagation()
-    let confirm = window.confirm("Deseja realmente excluir este projeto permanentemente?")
+    let confirm = window.confirm(t.dashboard.confirmDelete)
     if (!confirm) return
 
     let projectsRaw = localStorage.getItem("mai_paint_local_projects")
@@ -280,7 +292,7 @@ export const Dashboard = () => {
 
   function handleExport(project: LocalProject, e: React.MouseEvent) {
     e.stopPropagation()
-    exportProjectToPng(project.name, project.elements)
+    exportProjectToPng(project.name, project.elements, t)
     setActiveMenuId(null)
   }
 
@@ -291,7 +303,8 @@ export const Dashboard = () => {
 
   function formatDate(isoString: string) {
     let date = new Date(isoString)
-    return date.toLocaleDateString("pt-BR", {
+    let dateLocale = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US"
+    return date.toLocaleDateString(dateLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -307,16 +320,25 @@ export const Dashboard = () => {
   return (
     <div className={styles.dashboard}>
       <div className={styles.header}>
-        <span className={styles.headerTitle}>Meus Desenhos (Mai Paint)</span>
-        <div className={styles.searchWrapper}>
-          <Search size={13} className={styles.searchIcon} />
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Buscar projetos..."
-            value={searchQuery}
-            onChange={function(e) { setSearchQuery(e.target.value) }}
-          />
+        <span className={styles.headerTitle}>{t.dashboard.title}</span>
+        <div className={styles.headerActions}>
+          <div className={styles.searchWrapper}>
+            <Search size={13} className={styles.searchIcon} />
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder={t.dashboard.searchPlaceholder}
+              value={searchQuery}
+              onChange={function(e) { setSearchQuery(e.target.value) }}
+            />
+          </div>
+          <button
+            className={styles.settingsButton}
+            onClick={openSettings}
+            title={t.dashboard.settings}
+          >
+            <Settings size={16} />
+          </button>
         </div>
       </div>
 
@@ -325,7 +347,7 @@ export const Dashboard = () => {
           {/* New Project Card */}
           <div className={`${styles.card} ${styles.newProjectCard}`} onClick={newProject}>
             <FolderPlus size={36} className={styles.plusIcon} />
-            <span className={styles.newProjectText}>Criar Novo Desenho</span>
+            <span className={styles.newProjectText}>{t.dashboard.createNew}</span>
           </div>
 
           {/* List of local storage projects */}
@@ -357,28 +379,28 @@ export const Dashboard = () => {
                       onClick={function() { openLocalProject(project.id, project.name, project.elements) }}
                     >
                       <FolderOpen size={13} />
-                      Abrir
+                      {t.dashboard.open}
                     </button>
                     <button
                       className={styles.dropdownItem}
                       onClick={function(e) { handleStartRename(project, e) }}
                     >
                       <Edit2 size={13} />
-                      Renomear
+                      {t.dashboard.rename}
                     </button>
                     <button
                       className={styles.dropdownItem}
                       onClick={function(e) { handleExport(project, e) }}
                     >
                       <Download size={13} />
-                      Exportar PNG
+                      {t.dashboard.exportPng}
                     </button>
                     <button
                       className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}
                       onClick={function(e) { handleDelete(project.id, e) }}
                     >
                       <Trash2 size={13} />
-                      Excluir
+                      {t.dashboard.delete}
                     </button>
                   </div>
                 )}
@@ -412,7 +434,7 @@ export const Dashboard = () => {
                 )}
 
                 <span className={styles.projectInfo}>
-                  {project.elements.length} {project.elements.length === 1 ? "elemento" : "elementos"}
+                  {project.elements.length} {project.elements.length === 1 ? t.dashboard.element : t.dashboard.elements}
                 </span>
                 <span className={styles.projectInfo} style={{ fontSize: "9px", marginTop: "4px" }}>
                   {formatDate(project.updatedAt)}
@@ -424,10 +446,46 @@ export const Dashboard = () => {
 
         {filteredProjects.length === 0 && searchQuery !== "" && (
           <div className={styles.emptyState}>
-            <span className={styles.emptyStateText}>Nenhum projeto encontrado para "{searchQuery}"</span>
+            <span className={styles.emptyStateText}>{t.dashboard.noProjects.replace("{query}", searchQuery)}</span>
           </div>
         )}
       </div>
+
+      {isSettingsOpen && (
+        <div className={styles.modalBackdrop} onClick={closeSettings}>
+          <div className={styles.modalContent} onClick={function(e) { e.stopPropagation() }}>
+            <div className={styles.modalHeader}>
+              <h3>{t.dashboard.settings}</h3>
+              <button className={styles.closeButton} onClick={closeSettings}>×</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.settingsSection}>
+                <div className={styles.sectionTitle}>{t.properties.language}</div>
+                <div className={styles.langButtonGroup}>
+                  <button
+                    className={`${styles.langButton} ${locale === "en" ? styles.langButtonActive : ""}`}
+                    onClick={function() { changeLanguage("en") }}
+                  >
+                    English
+                  </button>
+                  <button
+                    className={`${styles.langButton} ${locale === "pt" ? styles.langButtonActive : ""}`}
+                    onClick={function() { changeLanguage("pt") }}
+                  >
+                    Português
+                  </button>
+                  <button
+                    className={`${styles.langButton} ${locale === "es" ? styles.langButtonActive : ""}`}
+                    onClick={function() { changeLanguage("es") }}
+                  >
+                    Español
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
