@@ -1,0 +1,103 @@
+.canvasWrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--background-canvas);
+  outline: none;
+  z-index: 1;
+}
+
+.gridBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(var(--border-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+  z-index: 0;
+}
+
+.textEditor {
+  position: absolute;
+  background: var(--background-canvas);
+  border: 1px solid var(--accent-color);
+  padding: 2px;
+  margin: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  z-index: 1001;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.canvasToolbar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--background-panel);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+.toolbarButton {
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.toolbarButton:hover:not(:disabled) {
+  background-color: var(--button-hover);
+}
+
+.toolbarButton:active:not(:disabled) {
+  background-color: var(--button-active);
+}
+
+.toolbarButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-color);
+  margin: 0 4px;
+}
+
+.toolbarButtonActive {
+  background-color: var(--accent-color) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.cursorGrab {
+  cursor: grab;
+}
+
+.cursorGrabbing {
+  cursor: grabbing;
+}

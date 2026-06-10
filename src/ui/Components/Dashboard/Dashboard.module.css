@@ -1,0 +1,256 @@
+.dashboard {
+  flex: 1;
+  background-color: var(--background-panel-opaque);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  height: 52px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-panel);
+  backdrop-filter: var(--glass-blur);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+  -webkit-app-region: drag; /* Draggable window zone */
+}
+
+.headerTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  -webkit-app-region: no-drag;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+.searchInput {
+  width: 200px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-panel-opaque);
+  color: var(--text-primary);
+  padding: 0 8px 0 26px;
+  font-size: 11.5px;
+  transition: all 0.15s ease-out;
+}
+
+.searchInput:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.25);
+  background-color: var(--background-canvas);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 8px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: var(--background-canvas);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color-active);
+  box-shadow: var(--shadow-md);
+}
+
+.newProjectCard {
+  border-style: dashed;
+  border-width: 2px;
+  background-color: transparent;
+  justify-content: center;
+  min-height: 160px;
+}
+
+.newProjectCard:hover {
+  background-color: var(--button-hover);
+  border-color: var(--accent-color);
+  transform: translateY(0);
+}
+
+.plusIcon {
+  color: var(--accent-color);
+  margin-bottom: 8px;
+}
+
+.newProjectText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-color);
+}
+
+.fileIconWrapper {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  background-color: var(--background-panel-opaque);
+  border-radius: 6px;
+  margin-bottom: 12px;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.card:hover .fileIconWrapper {
+  color: var(--accent-color);
+  background-color: var(--sidebar-active);
+}
+
+.projectName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 4px;
+  width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectInfo {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.menuButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease-out;
+  z-index: 5;
+}
+
+.card:hover .menuButton, .menuButtonActive {
+  opacity: 1;
+}
+
+.menuButton:hover {
+  background-color: var(--button-hover);
+  color: var(--text-primary);
+}
+
+/* Dropdown Menu styling */
+.dropdown {
+  position: absolute;
+  top: 36px;
+  right: 10px;
+  width: 150px;
+  background-color: var(--background-panel-opaque);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color-active);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  padding: 4px 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdownItem {
+  height: 26px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdownItem:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.dropdownItemDanger {
+  color: #ff3b30;
+}
+
+.dropdownItemDanger:hover {
+  background-color: #ff3b30;
+  color: white;
+}
+
+.renameInput {
+  width: 130px;
+  font-size: 11.5px;
+  border: 1px solid var(--accent-color);
+  background-color: var(--background-canvas);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 2px 4px;
+  text-align: center;
+  outline: none;
+}
+
+/* Empty search state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  color: var(--text-secondary);
+  gap: 12px;
+}
+
+.emptyStateText {
+  font-size: 13px;
+}
