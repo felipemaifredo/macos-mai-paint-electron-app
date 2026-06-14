@@ -209,7 +209,7 @@ function createWindow() {
     trafficLightPosition: { x: 12, y: 12 },
     icon: iconPath || undefined,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "../preload/preload.js"),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -218,11 +218,11 @@ function createWindow() {
   mainWindow = win
   createApplicationMenu(win)
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    win.loadURL(process.env.VITE_DEV_SERVER_URL)
+  if (process.env.ELECTRON_RENDERER_URL) {
+    win.loadURL(process.env.ELECTRON_RENDERER_URL)
     win.webContents.openDevTools()
   } else {
-    win.loadFile(path.join(__dirname, "../dist/index.html"))
+    win.loadFile(path.join(__dirname, "../renderer/index.html"))
   }
 }
 

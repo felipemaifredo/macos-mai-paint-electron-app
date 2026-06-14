@@ -1,0 +1,42 @@
+appId: com.maipaint.app
+productName: Mai Paint
+directories:
+  output: release
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!electron.vite.config.{js,ts,mjs,cjs}"
+  - "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
+  - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
+  - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+win:
+  icon: assets/win/logo.ico
+  target:
+    - nsis
+    - zip
+mac:
+  category: public.app-category.graphics-design
+  icon: assets/mac/logo-1024.icns
+  target:
+    - dmg
+  hardenedRuntime: true
+  gatekeeperAssess: false
+linux:
+  icon: assets/lin/logo.png
+  target:
+    - AppImage
+    - deb
+dmg:
+  background: null
+  backgroundColor: "#ffffff"
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 410
+      y: 150
+      type: link
+      path: /Applications
+    - x: 130
+      y: 150
+      type: file
