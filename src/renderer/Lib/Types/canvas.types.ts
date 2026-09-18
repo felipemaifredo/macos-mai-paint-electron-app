@@ -24,7 +24,10 @@ export type CanvasElement = {
   opacity: number
   fontSize?: number
   fontFamily?: string
+  align?: "left" | "center" | "right"
   groupId?: string
+  startConnectedTo?: { id: string; position: string }
+  endConnectedTo?: { id: string; position: string }
 }
 
 export type ElementStyle = {
@@ -34,6 +37,7 @@ export type ElementStyle = {
   opacity: number
   fontSize: number
   fontFamily: string
+  align: "left" | "center" | "right"
 }
 
 export type ProjectData = {

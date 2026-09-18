@@ -3,7 +3,10 @@ import {
   Copy,
   Trash2,
   FolderPlus,
-  FolderMinus
+  FolderMinus,
+  AlignLeft,
+  AlignCenter,
+  AlignRight
 } from "lucide-react"
 
 //Imports
@@ -43,6 +46,9 @@ export const PropertiesPanel = () => {
   const fontFamily = useCanvasStore(function(state) {
     return state.fontFamily
   })
+  const align = useCanvasStore(function(state) {
+    return state.align
+  })
 
   // Actions
   const setStyle = useCanvasStore(function(state) {
@@ -72,6 +78,7 @@ export const PropertiesPanel = () => {
   let currentOpacity = firstSelected ? firstSelected.opacity : opacity
   let currentFontSize = firstSelected ? firstSelected.fontSize ?? fontSize : fontSize
   let currentFontFamily = firstSelected ? firstSelected.fontFamily ?? fontFamily : fontFamily
+  let currentAlign = firstSelected ? firstSelected.align ?? align : align
 
   let hasTextSelected = elements.some(function(el) {
     return selectedIds.includes(el.id) && el.type === "text"
@@ -230,6 +237,32 @@ export const PropertiesPanel = () => {
                 setStyle({ fontSize: Math.max(10, parseInt(e.target.value, 10) || 10) })
               }}
             />
+          </div>
+          <div className={styles.row}>
+            <span className={styles.label}>{t.properties.align}</span>
+            <div style={{ display: "flex", gap: "4px", flex: 1 }}>
+              <button
+                className={`${styles.actionButton} ${currentAlign === "left" ? styles.checkboxButtonActive : ""}`}
+                style={{ flex: 1 }}
+                onClick={function() { setStyle({ align: "left" }) }}
+              >
+                <AlignLeft size={14} />
+              </button>
+              <button
+                className={`${styles.actionButton} ${currentAlign === "center" ? styles.checkboxButtonActive : ""}`}
+                style={{ flex: 1 }}
+                onClick={function() { setStyle({ align: "center" }) }}
+              >
+                <AlignCenter size={14} />
+              </button>
+              <button
+                className={`${styles.actionButton} ${currentAlign === "right" ? styles.checkboxButtonActive : ""}`}
+                style={{ flex: 1 }}
+                onClick={function() { setStyle({ align: "right" }) }}
+              >
+                <AlignRight size={14} />
+              </button>
+            </div>
           </div>
         </div>
       )}

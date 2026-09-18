@@ -77,6 +77,7 @@ type TextResources = {
     font: string
     systemFont: string
     monospaceFont: string
+    align: string
     fontSize: string
     quickActions: string
     duplicateTooltip: string
@@ -177,6 +178,7 @@ let texts: Languages = {
       font: "Font",
       systemFont: "macOS System",
       monospaceFont: "Monospace",
+      align: "Align",
       fontSize: "Size",
       quickActions: "Quick Actions",
       duplicateTooltip: "Duplicate Selected Elements",
@@ -268,6 +270,7 @@ let texts: Languages = {
       font: "Fonte",
       systemFont: "Sistema macOS",
       monospaceFont: "Monoespaçada",
+      align: "Alinhamento",
       fontSize: "Tamanho",
       quickActions: "Ações Rápidas",
       duplicateTooltip: "Duplicar Elementos Selecionados",
@@ -359,6 +362,7 @@ let texts: Languages = {
       font: "Fuente",
       systemFont: "Sistema macOS",
       monospaceFont: "Monoespacio",
+      align: "Alineación",
       fontSize: "Tamaño",
       quickActions: "Acciones Rápidas",
       duplicateTooltip: "Duplicar Elementos Seleccionados",

@@ -52,6 +52,26 @@ export const Sidebar = () => {
   let isMac = window.navigator.userAgent.indexOf("Mac") !== -1
   let cmdKey = isMac ? "⌘" : "Ctrl"
 
+  React.useEffect(function() {
+    function handleKeyDown(e: KeyboardEvent) {
+      let target = e.target as HTMLElement
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return
+      }
+
+      let key = e.key.toUpperCase()
+      let tool = tools.find(function(t) { return t.shortcut === key })
+      if (tool) {
+        setTool(tool.type)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return function() {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [setTool, locale]) // Reacting to locale since tools array is recreated and translated
+
   return (
     <div className={styles.sidebar}>
       <div className={styles.toolsGroup}>
@@ -68,6 +88,7 @@ export const Sidebar = () => {
               title={`${tool.label} (${tool.shortcut})`}
             >
               {tool.icon}
+              <span className={styles.toolShortcut}>{tool.shortcut}</span>
             </button>
           )
         })}

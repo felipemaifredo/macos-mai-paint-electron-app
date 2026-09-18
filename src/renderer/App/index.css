@@ -23,6 +23,10 @@
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
   
   --glass-blur: blur(20px);
+  
+  --transition-fast: 0.15s ease-out;
+  --transition-smooth: 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  --easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -50,6 +54,10 @@
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
     
     --glass-blur: blur(20px);
+    
+    --transition-fast: 0.15s ease-out;
+    --transition-smooth: 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    --easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
   }
 }
 

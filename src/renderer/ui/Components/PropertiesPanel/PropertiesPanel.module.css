@@ -94,6 +94,11 @@
   font-size: 11px;
   padding: 0 8px;
   white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.checkboxButton:active {
+  transform: scale(0.95);
 }
 
 .checkboxButtonActive {
@@ -151,7 +156,7 @@
   justify-content: center;
   gap: 4px;
   cursor: pointer;
-  transition: all 0.15s ease-out;
+  transition: all var(--transition-fast);
   padding: 0 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -165,6 +170,7 @@
 
 .actionButton:active:not(:disabled) {
   background-color: var(--button-active);
+  transform: scale(0.95);
 }
 
 .actionButton:disabled {

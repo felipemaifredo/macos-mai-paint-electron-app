@@ -1,6 +1,6 @@
 //Libs
 import React, { useState, useRef, useEffect } from "react"
-import { Stage, Layer, Transformer, Rect } from "react-konva"
+import { Stage, Layer, Transformer, Rect, Circle as KonvaCircle } from "react-konva"
 import {
   ZoomIn,
   ZoomOut,
@@ -24,6 +24,7 @@ type TextEditorState = {
   text: string
   fontSize: number
   fontFamily: string
+  align: "left" | "center" | "right"
   isNew: boolean
 }
 
@@ -41,6 +42,18 @@ function snap(val: number, step: number = 20) {
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
+}
+
+function getElementEdgeAnchors(el: CanvasElementType) {
+  if (el.type !== "rectangle" && el.type !== "circle") return []
+  let w = el.width ?? 0
+  let h = el.height ?? 0
+  return [
+    { position: "top", x: el.x + w / 2, y: el.y },
+    { position: "right", x: el.x + w, y: el.y + h / 2 },
+    { position: "bottom", x: el.x + w / 2, y: el.y + h },
+    { position: "left", x: el.x, y: el.y + h / 2 }
+  ]
 }
 
 //Main
@@ -71,6 +84,9 @@ export const CanvasContainer = () => {
   })
   const fontFamily = useCanvasStore(function(state) {
     return state.fontFamily
+  })
+  const align = useCanvasStore(function(state) {
+    return state.align
   })
 
   // Viewport Settings
@@ -118,6 +134,9 @@ export const CanvasContainer = () => {
   const setPan = useCanvasStore(function(state) {
     return state.setPan
   })
+  const setTool = useCanvasStore(function(state) {
+    return state.setTool
+  })
 
   // Local component states
   const [isSpacePressed, setIsSpacePressed] = useState(false)
@@ -149,6 +168,7 @@ export const CanvasContainer = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<any>(null)
   const transformerRef = useRef<any>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
   const dragStartRef = useRef({ x: 0, y: 0 })
 
   // Listen to global Spacebar keydown for panning cursor
@@ -253,13 +273,41 @@ export const CanvasContainer = () => {
 
     // 4. Drawing tools
     if (tool === "text") {
+      let textX = finalX
+      let textY = finalY
+
+      if (!clickedOnEmpty) {
+        const targetId = e.target.id()
+        if (targetId) {
+          const el = elements.find(function(item) { return item.id === targetId })
+          if (el) {
+            if (el.type === "rectangle" || el.type === "circle") {
+              textX = el.x + (el.width ?? 0) / 2
+              textY = el.y + (el.height ?? 0) / 2
+              textX -= 150 / 2
+              textY -= 30 / 2
+            } else if ((el.type === "line" || el.type === "arrow") && el.points && el.points.length >= 4) {
+              const p = el.points
+              const startX = p[0]
+              const startY = p[1]
+              const endX = p[p.length - 2]
+              const endY = p[p.length - 1]
+              textX = (startX + endX) / 2
+              textY = (startY + endY) / 2
+              textX -= 150 / 2
+              textY -= 30 / 2
+            }
+          }
+        }
+      }
+
       // Text Creation
       const id = generateId()
       const newTextEl: CanvasElementType = {
         id,
         type: "text",
-        x: finalX,
-        y: finalY,
+        x: textX,
+        y: textY,
         width: 150,
         height: 30,
         text: "",
@@ -268,21 +316,24 @@ export const CanvasContainer = () => {
         strokeWidth: 1,
         opacity,
         fontSize,
-        fontFamily
+        fontFamily,
+        align
       }
       
       addElement(newTextEl)
       setTextEditor({
         id,
-        x: finalX,
-        y: finalY,
+        x: textX,
+        y: textY,
         width: 150,
         height: 30,
         text: "",
         fontSize,
         fontFamily,
+        align,
         isNew: true
       })
+      setTool("select") // Switch back to select tool so the next click doesn't create another text
       return
     }
 
@@ -317,10 +368,13 @@ export const CanvasContainer = () => {
       if (stage) {
         const pos = stage.getPointerPosition()
         if (pos) {
-          setPan({
-            x: pos.x - dragStartRef.current.x,
-            y: pos.y - dragStartRef.current.y
-          })
+          const newX = pos.x - dragStartRef.current.x
+          const newY = pos.y - dragStartRef.current.y
+          stage.position({ x: newX, y: newY })
+          stage.batchDraw()
+          if (gridRef.current) {
+            gridRef.current.style.backgroundPosition = `${newX}px ${newY}px`
+          }
         }
       }
       return
@@ -417,6 +471,10 @@ export const CanvasContainer = () => {
   function handleMouseUp() {
     if (isPanning) {
       setIsPanning(false)
+      const stage = stageRef.current
+      if (stage) {
+        setPan({ x: stage.x(), y: stage.y() })
+      }
       return
     }
 
@@ -428,12 +486,39 @@ export const CanvasContainer = () => {
 
     // Drawing shape end
     if (drawingElement) {
+      let finalElement = { ...drawingElement }
+      
+      // Handle end connection snapping for arrows
+      if (finalElement.type === "arrow" && finalElement.points && finalElement.points.length >= 4) {
+        let p = finalElement.points
+        let endX = p[p.length - 2]
+        let endY = p[p.length - 1]
+        
+        let snapped = false
+        for (let el of elements) {
+          if (el.id === finalElement.startConnectedTo?.id) continue
+          
+          let anchors = getElementEdgeAnchors(el)
+          for (let anchor of anchors) {
+            let dist = Math.sqrt(Math.pow(endX - anchor.x, 2) + Math.pow(endY - anchor.y, 2))
+            if (dist < 20) {
+              p[p.length - 2] = anchor.x
+              p[p.length - 1] = anchor.y
+              finalElement.endConnectedTo = { id: el.id, position: anchor.position }
+              snapped = true
+              break
+            }
+          }
+          if (snapped) break
+        }
+      }
+
       // Validate element size for shapes
-      let isTooSmall = (drawingElement.type === "rectangle" || drawingElement.type === "circle") &&
-        Math.abs(drawingElement.width ?? 0) < 5 && Math.abs(drawingElement.height ?? 0) < 5
+      let isTooSmall = (finalElement.type === "rectangle" || finalElement.type === "circle") &&
+        Math.abs(finalElement.width ?? 0) < 5 && Math.abs(finalElement.height ?? 0) < 5
       
       if (!isTooSmall) {
-        addElement(drawingElement)
+        addElement(finalElement)
       }
       setDrawingElement(null)
     }
@@ -501,6 +586,26 @@ export const CanvasContainer = () => {
     setSelectedIds(newSelection)
   }
 
+  function handleAnchorMouseDown(e: any, anchor: { x: number; y: number }) {
+    e.cancelBubble = true
+    const id = generateId()
+    const newEl: CanvasElementType = {
+      id,
+      type: "arrow",
+      x: 0,
+      y: 0,
+      points: [anchor.x, anchor.y, anchor.x, anchor.y],
+      fill: "transparent",
+      stroke,
+      strokeWidth,
+      opacity,
+      fontSize,
+      fontFamily,
+      align
+    }
+    setDrawingElement(newEl)
+  }
+
   // Double Click Text to Edit
   function handleDoubleClickText(id: string, textEl: CanvasElementType) {
     setTextEditor({
@@ -512,6 +617,7 @@ export const CanvasContainer = () => {
       text: textEl.text ?? "",
       fontSize: textEl.fontSize ?? 14,
       fontFamily: textEl.fontFamily ?? "-apple-system",
+      align: textEl.align ?? "left",
       isNew: false
     })
   }
@@ -538,7 +644,8 @@ export const CanvasContainer = () => {
       strokeWidth: 1,
       opacity,
       fontSize,
-      fontFamily
+      fontFamily,
+      align
     }
 
     addElement(newTextEl)
@@ -551,6 +658,7 @@ export const CanvasContainer = () => {
       text: "",
       fontSize,
       fontFamily,
+      align,
       isNew: true
     })
   }
@@ -612,12 +720,54 @@ export const CanvasContainer = () => {
     } else {
       let finalWidth = Math.max(5, (el.width ?? 10) * scaleX)
       let finalHeight = Math.max(5, (el.height ?? 10) * scaleY)
+      let finalX = node.x()
+      let finalY = node.y()
+      let snapWidth = snapToGrid ? snap(finalWidth) : finalWidth
+      let snapHeight = snapToGrid ? snap(finalHeight) : finalHeight
 
       updateElement(id, {
-        x: node.x(),
-        y: node.y(),
-        width: snapToGrid ? snap(finalWidth) : finalWidth,
-        height: snapToGrid ? snap(finalHeight) : finalHeight
+        x: finalX,
+        y: finalY,
+        width: snapWidth,
+        height: snapHeight
+      })
+
+      // Update connected arrows
+      elements.forEach(function(arrow) {
+        if (arrow.type === "arrow" && arrow.points && arrow.points.length >= 4) {
+          if (!arrow.startConnectedTo && !arrow.endConnectedTo) return
+
+          let updated = false
+          let newPoints = [...arrow.points]
+
+          let startShape = elements.find(function(s) { return s.id === arrow.startConnectedTo?.id })
+          if (startShape && startShape.id === id) {
+             let freshShape = { ...startShape, x: finalX, y: finalY, width: snapWidth, height: snapHeight }
+             let anchors = getElementEdgeAnchors(freshShape as CanvasElementType)
+             let anchor = anchors.find(function(a) { return a.position === arrow.startConnectedTo!.position })
+             if (anchor) {
+               newPoints[0] = anchor.x
+               newPoints[1] = anchor.y
+               updated = true
+             }
+          }
+
+          let endShape = elements.find(function(s) { return s.id === arrow.endConnectedTo?.id })
+          if (endShape && endShape.id === id) {
+             let freshShape = { ...endShape, x: finalX, y: finalY, width: snapWidth, height: snapHeight }
+             let anchors = getElementEdgeAnchors(freshShape as CanvasElementType)
+             let anchor = anchors.find(function(a) { return a.position === arrow.endConnectedTo!.position })
+             if (anchor) {
+               newPoints[newPoints.length - 2] = anchor.x
+               newPoints[newPoints.length - 1] = anchor.y
+               updated = true
+             }
+          }
+
+          if (updated) {
+             updateElement(arrow.id, { points: newPoints })
+          }
+        }
       })
     }
     saveHistory()
@@ -666,6 +816,58 @@ export const CanvasContainer = () => {
         }
       }
     })
+
+    // Update connected arrows
+    elements.forEach(function(arrow) {
+      if (arrow.type === "arrow" && arrow.points && arrow.points.length >= 4) {
+        if (!arrow.startConnectedTo && !arrow.endConnectedTo) return
+
+        let updated = false
+        let newPoints = [...arrow.points]
+        
+        let isArrowSelected = selectedIds.includes(arrow.id)
+        if (isArrowSelected) {
+          newPoints = newPoints.map(function(pt, idx) {
+            return idx % 2 === 0 ? pt + finalDx : pt + finalDy
+          })
+        }
+
+        let startShape = elements.find(function(el) { return el.id === arrow.startConnectedTo?.id })
+        if (startShape) {
+           let isStartSelected = selectedIds.includes(startShape.id)
+           let freshShape = isStartSelected 
+             ? { ...startShape, x: startShape.x + finalDx, y: startShape.y + finalDy } 
+             : startShape
+           let anchors = getElementEdgeAnchors(freshShape as CanvasElementType)
+           let anchor = anchors.find(function(a) { return a.position === arrow.startConnectedTo!.position })
+           if (anchor) {
+             newPoints[0] = anchor.x
+             newPoints[1] = anchor.y
+             updated = true
+           }
+        }
+        
+        let endShape = elements.find(function(el) { return el.id === arrow.endConnectedTo?.id })
+        if (endShape) {
+           let isEndSelected = selectedIds.includes(endShape.id)
+           let freshShape = isEndSelected 
+             ? { ...endShape, x: endShape.x + finalDx, y: endShape.y + finalDy } 
+             : endShape
+           let anchors = getElementEdgeAnchors(freshShape as CanvasElementType)
+           let anchor = anchors.find(function(a) { return a.position === arrow.endConnectedTo!.position })
+           if (anchor) {
+             newPoints[newPoints.length - 2] = anchor.x
+             newPoints[newPoints.length - 1] = anchor.y
+             updated = true
+           }
+        }
+
+        if (updated) {
+           updateElement(arrow.id, { points: newPoints })
+        }
+      }
+    })
+
     saveHistory()
   }
 
@@ -683,19 +885,48 @@ export const CanvasContainer = () => {
       width: `${textEditor.width * zoom}px`,
       height: `${textEditor.height * zoom}px`,
       fontSize: `${textEditor.fontSize * zoom}px`,
-      fontFamily: textEditor.fontFamily
+      fontFamily: textEditor.fontFamily,
+      textAlign: textEditor.align
     }
+  }
+
+  // Compute anchor points for selected element
+  let connectionAnchors: { position: string; x: number; y: number }[] = []
+  if (selectedIds.length === 1 && tool === "select") {
+    let el = elements.find(function(item) { return item.id === selectedIds[0] })
+    if (el && (el.type === "rectangle" || el.type === "circle")) {
+      let w = el.width ?? 0
+      let h = el.height ?? 0
+      connectionAnchors = [
+        { position: "top", x: el.x + w / 2, y: el.y - 16 },
+        { position: "right", x: el.x + w + 16, y: el.y + h / 2 },
+        { position: "bottom", x: el.x + w / 2, y: el.y + h + 16 },
+        { position: "left", x: el.x - 16, y: el.y + h / 2 }
+      ]
+    }
+  }
+
+  let cursorClass = ""
+  if (isSpacePressed) {
+    cursorClass = isPanning ? styles.cursorGrabbing : styles.cursorGrab
+  } else if (tool === "text") {
+    cursorClass = styles.cursorText
+  } else if (tool === "pencil") {
+    cursorClass = styles.cursorPencil
+  } else if (tool === "eraser") {
+    cursorClass = styles.cursorEraser
+  } else if (tool !== "select") {
+    cursorClass = styles.cursorCrosshair
   }
 
   return (
     <div
       ref={containerRef}
-      className={`${styles.canvasWrapper} ${
-        isSpacePressed ? (isPanning ? styles.cursorGrabbing : styles.cursorGrab) : ""
-      }`}
+      className={`${styles.canvasWrapper} ${cursorClass}`}
     >
       {/* CSS repeating grid */}
       <div
+        ref={gridRef}
         className={styles.gridBackground}
         style={{
           backgroundPosition: `${pan.x}px ${pan.y}px`,
@@ -776,15 +1007,48 @@ export const CanvasContainer = () => {
             onDragEnd={handleDragEnd}
             onTransformEnd={handleTransformEnd}
           />
+
+          {/* Connection Anchors */}
+          {connectionAnchors.map(function(anchor) {
+            return (
+              <KonvaCircle
+                key={`anchor-${anchor.position}`}
+                x={anchor.x}
+                y={anchor.y}
+                radius={5 / zoom}
+                fill="#ffffff"
+                stroke="#007aff"
+                strokeWidth={2 / zoom}
+                onMouseDown={function(e) { handleAnchorMouseDown(e, anchor) }}
+                onMouseEnter={function(e) {
+                  let container = e.target.getStage()?.container()
+                  if (container) container.style.cursor = "crosshair"
+                }}
+                onMouseLeave={function(e) {
+                  let container = e.target.getStage()?.container()
+                  if (container) {
+                    container.style.cursor = ""
+                  }
+                }}
+              />
+            )
+          })}
         </Layer>
       </Stage>
 
       {/* HTML absolute Text Editor */}
       {textEditor && (
         <textarea
+          ref={function(el) {
+            if (el) {
+              // Pequeno delay para evitar que o mouseup/click native feche o textarea imediatamente
+              setTimeout(function() {
+                el.focus()
+              }, 10)
+            }
+          }}
           className={styles.textEditor}
           style={editorStyle}
-          autoFocus
           value={textEditor.text}
           onChange={function(e) {
             setTextEditor({ ...textEditor, text: e.target.value })

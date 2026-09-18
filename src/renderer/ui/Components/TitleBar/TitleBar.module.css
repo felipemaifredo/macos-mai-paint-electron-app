@@ -28,7 +28,7 @@
   font-size: 11px;
   cursor: pointer;
   -webkit-app-region: no-drag;
-  transition: all 0.15s ease-out;
+  transition: all var(--transition-fast);
 }
 
 .backButton:hover {
@@ -37,6 +37,7 @@
 
 .backButton:active {
   background-color: var(--button-active);
+  transform: scale(0.95);
 }
 
 .titleContainer {
@@ -53,7 +54,7 @@
   -webkit-app-region: no-drag;
   padding: 2px 6px;
   border-radius: 4px;
-  transition: background-color 0.15s ease-out;
+  transition: all var(--transition-fast);
 }
 
 .titleText:hover {

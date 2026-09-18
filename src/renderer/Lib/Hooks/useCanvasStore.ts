@@ -16,6 +16,7 @@ type CanvasStore = {
   opacity: number
   fontSize: number
   fontFamily: string
+  align: "left" | "center" | "right"
 
   showGrid: boolean
   snapToGrid: boolean
@@ -111,6 +112,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   opacity: 1,
   fontSize: 14,
   fontFamily: "-apple-system",
+  align: "left",
 
   showGrid: true,
   snapToGrid: true,

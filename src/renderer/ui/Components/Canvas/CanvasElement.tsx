@@ -1,4 +1,4 @@
-//Libs
+import React from "react"
 import { Rect, Ellipse, Line, Arrow, Text } from "react-konva"
 
 //Imports
@@ -15,7 +15,7 @@ type CanvasElementProps = {
 }
 
 //Main
-export const CanvasElement = (props: CanvasElementProps) => {
+export const CanvasElement = React.memo((props: CanvasElementProps) => {
   let { element, onSelect, onDoubleClickText, draggable, onDragStart, onDragEnd } = props
 
   function handleSelect(e: any) {
@@ -37,7 +37,8 @@ export const CanvasElement = (props: CanvasElementProps) => {
     onClick: handleSelect,
     onTap: handleSelect,
     onDragStart: onDragStart,
-    onDragEnd: onDragEnd
+    onDragEnd: onDragEnd,
+    perfectDrawEnabled: false
   }
 
   if (element.type === "rectangle") {
@@ -107,6 +108,7 @@ export const CanvasElement = (props: CanvasElementProps) => {
         text={element.text ?? ""}
         fontSize={element.fontSize ?? 14}
         fontFamily={element.fontFamily ?? "-apple-system"}
+        align={element.align ?? "left"}
         fill={element.stroke} // Texts in diagrams use the stroke color as the text color
         onDblClick={handleTextDoubleClick}
         onDblTap={handleTextDoubleClick}
@@ -130,4 +132,4 @@ export const CanvasElement = (props: CanvasElementProps) => {
   }
 
   return null
-}
+})
